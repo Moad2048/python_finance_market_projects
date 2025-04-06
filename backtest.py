@@ -68,8 +68,8 @@ class Backtester():
         self.on_bar = None
 
         self.trades = pd.DataFrame(
-            columns=['state', 'symbol', 'order_type', 'volume', 'open_time', 'open_price', 'close_time',
-                     'close_price', 'sl', 'tp', 'info'])
+            columns=['state', 'symbol', 'order_type', 'volume', 'open_time', 'open_price', 'close_time','close_price',
+             'sl', 'tp', 'info'])
 
     def set_starting_balance(self, starting_balance, currency='EUR'):
         self.starting_balance = starting_balance
