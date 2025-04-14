@@ -318,10 +318,10 @@ def evaluate_backtest(df_og):
     print('biggest_loss', biggest_loss)
 
     win_trades = df[df['profit'] > 0]
-    display(win_trades)
+    #display(win_trades)
 
     loss_trades = df[df['profit'] < 0]
-    display(loss_trades)
+    #display(loss_trades)
 
     avg_win = win_trades['profit'].mean()
     print('avg_win', avg_win)
@@ -334,6 +334,9 @@ def evaluate_backtest(df_og):
 
     count_loss_trades = loss_trades.shape[0]
     print('count_loss_trades', count_loss_trades)
+
+    win_rate1 = count_profit_trades / (count_profit_trades + count_loss_trades) * 100
+    print(f"Win Rate: {win_rate1:.2f}%")
 
     win_rate = count_profit_trades / count_loss_trades
     print('win_rate', round(win_rate, 2))
