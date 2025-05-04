@@ -1,5 +1,4 @@
 #This is ATJ Traders' Backtester. For more information visit: https://www.youtube.com/@ATJTraders618"""
-
 import pandas as pd
 import MetaTrader5 as mt5
 import plotly.io as pio
@@ -251,7 +250,7 @@ class Backtester():
             json.dump(data, jsonfile)
 
         return 1
-
+    
 
 # Extract Data and Visualization
 def get_ohlc_history(symbol, timeframe, date_from, date_to, additional_columns=[]):
@@ -308,14 +307,19 @@ def get_tick_history(symbol, start, end):
 
 def evaluate_backtest(df_og):
     df = df_og.copy()
-    df['open_time'] = pd.to_datetime(df['open_time'])
-    df['close_time'] = pd.to_datetime(df['close_time'])
+    #df['open_time'] = pd.to_datetime(df['open_time'])
+    #df['close_time'] = pd.to_datetime(df['close_time'])
 
     biggest_win = df['profit'].max()
     print('biggest_profit', biggest_win)
 
     biggest_loss = df['profit'].min()
-    print('biggest_loss', biggest_loss)
+    print('daily_drawdown', biggest_loss)
+
+    df['current_max'] = df['profit_cumulative'].expanding().max()
+    df['drawdown'] = df['profit_cumulative'] - df['current_max']
+    max_drawdown = df['drawdown'].min()
+    print('max_drawown', max_drawdown)
 
     win_trades = df[df['profit'] > 0]
     #display(win_trades)
@@ -333,9 +337,9 @@ def evaluate_backtest(df_og):
     print('count_profit_trades', count_profit_trades)
 
     count_loss_trades = loss_trades.shape[0]
-    print('count_loss_trades', count_loss_trades)
+    print('count_loss_trades', count_loss_trades)##
 
-    win_rate1 = count_profit_trades / (count_profit_trades + count_loss_trades) * 100
+    win_rate1 = count_profit_trades / (count_loss_trades + count_profit_trades) * 100
     print(f"Win Rate1: {win_rate1:.2f}%")
 
     win_rate = count_profit_trades / count_loss_trades
@@ -351,21 +355,47 @@ def evaluate_backtest(df_og):
     display(fig_ordertype)
 
     df['dayofweek'] = df['close_time'].dt.dayofweek
-    display(df)
+    #display(df)
 
     df_by_day = df.groupby('dayofweek', as_index=False)['profit'].sum()
     fig_day = px.bar(df_by_day, x='dayofweek', y='profit')
     display(fig_day)
+
+    # Extract month name or number
+    df['month'] = df['close_time'].dt.to_period('M').astype(str)  # Format: '2024-01', '2024-02', etc.
+    # Group by month and sum profits
+    monthly_profit = df.groupby('month', as_index=False)['profit'].sum()
+    # Sort by month for proper order
+    monthly_profit = monthly_profit.sort_values('month')
+    # Plot
+    fig = px.bar(monthly_profit, x='month', y='profit',
+                 title='Total Profit Per Month',
+                 labels={'month': 'Month', 'profit': 'Total Profit'},
+                 color_discrete_sequence=['#00CC96'])
+    fig.update_layout(xaxis_tickangle=-45)
+    fig.show()
+
+    # Extract year from close_time
+    df['year'] = df['close_time'].dt.year
+    # Group by year and sum profits
+    yearly_profit = df.groupby('year', as_index=False)['profit'].sum()
+    # Plot
+    fig = px.bar(yearly_profit, x='year', y='profit',
+                 title='Total Profit Per Year',
+                 labels={'year': 'Year', 'profit': 'Total Profit'},
+                 color_discrete_sequence=['#EF553B'])
+    fig.update_layout(xaxis=dict(type='category'))  # Ensure years stay categorical
+    fig.show()
 
     df['current_max'] = df['profit_cumulative'].expanding().max()
     df['drawdown'] = df['profit_cumulative'] - df['current_max']
     display(df)
 
     fig_drawdown = px.line(df, x='close_time', y=['profit_cumulative', 'current_max'], title='pnl curve')
-    display(fig_drawdown)
+    #display(fig_drawdown)
 
     fig_drawdown2 = px.line(df, x='close_time', y='drawdown', title='drawdown curve')
-    display(fig_drawdown2)
+    #display(fig_drawdown2)
 
     max_drawdown = df['drawdown'].min()
-    print('max_drawdown', round(max_drawdown, 2))
+    #print('max_drawdown', round(max_drawdown, 2))
