@@ -311,15 +311,15 @@ def evaluate_backtest(df_og):
     #df['close_time'] = pd.to_datetime(df['close_time'])
 
     biggest_win = df['profit'].max()
-    print('biggest_profit', biggest_win)
+    print('biggest_profit:', round(biggest_win, 2))
 
     biggest_loss = df['profit'].min()
-    print('daily_drawdown', biggest_loss)
+    print('daily_drawdown:', round(biggest_loss, 2))
 
     df['current_max'] = df['profit_cumulative'].expanding().max()
     df['drawdown'] = df['profit_cumulative'] - df['current_max']
     max_drawdown = df['drawdown'].min()
-    print('max_drawown', max_drawdown)
+    print('max_drawown:', round(max_drawdown, 2))
 
     win_trades = df[df['profit'] > 0]
     #display(win_trades)
@@ -328,16 +328,16 @@ def evaluate_backtest(df_og):
     #display(loss_trades)
 
     avg_win = win_trades['profit'].mean()
-    print('avg_win', avg_win)
+    print('avg_win:', round(avg_win, 2))
 
     avg_loss = loss_trades['profit'].mean()
-    print('avg_loss', avg_loss)
+    print('avg_loss:', round(avg_loss, 2))
 
     count_profit_trades = win_trades.shape[0]
-    print('count_profit_trades', count_profit_trades)
+    print('count_profit_trades:', count_profit_trades)
 
     count_loss_trades = loss_trades.shape[0]
-    print('count_loss_trades', count_loss_trades)##
+    print('count_loss_trades:', count_loss_trades)##
 
     win_rate1 = count_profit_trades / (count_loss_trades + count_profit_trades) * 100
     print(f"Win Rate1: {win_rate1:.2f}%")
@@ -346,7 +346,7 @@ def evaluate_backtest(df_og):
     print('win_rate', round(win_rate, 2))
 
     rrr = abs(avg_win / avg_loss)
-    print('rrr', round(rrr, 2))
+    print('rrr:', round(rrr, 2))
 
     df_by_ordertype = df.groupby('order_type', as_index=False)['profit'].sum()
     display(df_by_ordertype)
