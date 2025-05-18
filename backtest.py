@@ -307,8 +307,8 @@ def get_tick_history(symbol, start, end):
 
 def evaluate_backtest(df_og):
     df = df_og.copy()
-    #df['open_time'] = pd.to_datetime(df['open_time'])
-    #df['close_time'] = pd.to_datetime(df['close_time'])
+    df['open_time'] = pd.to_datetime(df['open_time'])
+    df['close_time'] = pd.to_datetime(df['close_time'])
 
     biggest_win = df['profit'].max()
     print('biggest_profit:', round(biggest_win, 2))
