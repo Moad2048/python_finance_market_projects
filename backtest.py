@@ -343,7 +343,7 @@ def evaluate_backtest(df_og):
     print(f"Win Rate1: {win_rate1:.2f}%")
 
     win_rate = count_profit_trades / count_loss_trades
-    print('win_rate', round(win_rate, 2))
+    #print('win_rate', round(win_rate, 2))
 
     rrr = abs(avg_win / avg_loss)
     print('rrr:', round(rrr, 2))
@@ -354,12 +354,19 @@ def evaluate_backtest(df_og):
     fig_ordertype = px.bar(df_by_ordertype, x='order_type', y='profit')
     display(fig_ordertype)
 
-    df['dayofweek'] = df['close_time'].dt.dayofweek
+    df['dayofweek'] = df['open_time'].dt.dayofweek
     #display(df)
 
     df_by_day = df.groupby('dayofweek', as_index=False)['profit'].sum()
     fig_day = px.bar(df_by_day, x='dayofweek', y='profit')
     display(fig_day)
+    #best hour time for execution
+    df['hourofday'] = df['open_time'].dt.hour
+    #display(df)
+
+    df_by_hour = df.groupby('hourofday', as_index=False)['profit'].sum()
+    fig_hour = px.bar(df_by_hour, x='hourofday', y='profit')
+    display(fig_hour)
 
     # Extract month name or number
     df['month'] = df['close_time'].dt.to_period('M').astype(str)  # Format: '2024-01', '2024-02', etc.
@@ -395,7 +402,7 @@ def evaluate_backtest(df_og):
     #display(fig_drawdown)
 
     fig_drawdown2 = px.line(df, x='close_time', y='drawdown', title='drawdown curve')
-    #display(fig_drawdown2)
+    display(fig_drawdown2)
 
     max_drawdown = df['drawdown'].min()
-    #print('max_drawdown', round(max_drawdown, 2))
+    #print('max_drawdown', round(max_drawdown, 2),)
