@@ -321,6 +321,10 @@ def evaluate_backtest(df_og):
     max_drawdown = df['drawdown'].min()
     print('max_drawown:', round(max_drawdown, 2))
 
+    df['drawdown1'] = df['profit_cumulative'].min()
+    max_drawdown1 = df['drawdown1'].min()
+    print('max_drawown1:', round(max_drawdown1, 2))
+
     win_trades = df[df['profit'] > 0]
     #display(win_trades)
 
