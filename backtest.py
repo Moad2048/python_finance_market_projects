@@ -321,15 +321,8 @@ def evaluate_backtest(df_og):
     max_drawdown = df['drawdown'].min()
     print('max_drawown:', round(max_drawdown, 2))
 
-    df['drawdown1'] = df['profit_cumulative'].min()
-    max_drawdown1 = df['drawdown1'].min()
-    print('max_drawown1:', round(max_drawdown1, 2))
-
     win_trades = df[df['profit'] > 0]
-    #display(win_trades)
-
     loss_trades = df[df['profit'] < 0]
-    #display(loss_trades)
 
     avg_win = win_trades['profit'].mean()
     print('avg_win:', round(avg_win, 2))
@@ -360,14 +353,13 @@ def evaluate_backtest(df_og):
 
     df['dayofweek'] = df['open_time'].dt.dayofweek
     #display(df)
-
     df_by_day = df.groupby('dayofweek', as_index=False)['profit'].sum()
     fig_day = px.bar(df_by_day, x='dayofweek', y='profit')
     display(fig_day)
     #best hour time for execution
+
     df['hourofday'] = df['open_time'].dt.hour
     #display(df)
-
     df_by_hour = df.groupby('hourofday', as_index=False)['profit'].sum()
     fig_hour = px.bar(df_by_hour, x='hourofday', y='profit')
     display(fig_hour)
@@ -398,15 +390,18 @@ def evaluate_backtest(df_og):
     fig.update_layout(xaxis=dict(type='category'))  # Ensure years stay categorical
     fig.show()
 
+    display(win_trades)
+    display(loss_trades)
+
     df['current_max'] = df['profit_cumulative'].expanding().max()
     df['drawdown'] = df['profit_cumulative'] - df['current_max']
     display(df)
 
-    fig_drawdown = px.line(df, x='close_time', y=['profit_cumulative', 'current_max'], title='pnl curve')
+    #fig_drawdown = px.line(df, x='close_time', y=['profit_cumulative', 'current_max'], title='pnl curve')
     #display(fig_drawdown)
 
     fig_drawdown2 = px.line(df, x='close_time', y='drawdown', title='drawdown curve')
     display(fig_drawdown2)
 
     max_drawdown = df['drawdown'].min()
-    #print('max_drawdown', round(max_drawdown, 2),)
+    print('max_drawdown', round(max_drawdown, 2),)
