@@ -253,11 +253,14 @@ class Backtester():
     
 
 # Extract Data and Visualization
+ohlc_dff = None
 def get_ohlc_history(symbol, timeframe, date_from, date_to, additional_columns=[]):
+    global ohlc_dff
     ohlc = mt5.copy_rates_range(symbol, timeframe, date_from, date_to)
 
     ohlc_df = pd.DataFrame(ohlc)
     ohlc_df['time'] = pd.to_datetime(ohlc_df['time'], unit='s')
+    ohlc_dff = ohlc_df
     return ohlc_df[['time', 'open', 'high', 'low', 'close'] + additional_columns]
 
 
@@ -306,20 +309,78 @@ def get_tick_history(symbol, start, end):
 
 
 def evaluate_backtest(df_og):
+    global ohlc_dff
     df = df_og.copy()
     df['open_time'] = pd.to_datetime(df['open_time'])
     df['close_time'] = pd.to_datetime(df['close_time'])
+    df['date'] = df['open_time'].dt.date
+    df['time'] = pd.to_datetime(df['close_time'], unit= 's')
+
+    maes = []
+    equity_points = []
+    running_equity = 0
+    for _, trade in df.iterrows():
+        open_time = trade['open_time']
+        close_time = trade['close_time']
+        
+        trade_data = ohlc_dff[   # assumes ohlc_df is available globally
+            (ohlc_dff['time'] >= open_time) &
+            (ohlc_dff['time'] <= close_time)
+        ]
+        if trade['order_type'] == 'buy':
+            min_price = trade_data['low'].min()
+            mae = (min_price - trade['open_price']) * trade['volume'] 
+        elif trade['order_type'] == 'sell':
+            max_price = trade_data['high'].max()
+            mae = (trade['open_price']- max_price) * trade['volume'] 
+        else:
+            mae = 0000
+        maes.append(mae)
+        # equity before trade
+        equity_points.append((trade['time'], running_equity))
+
+        # equity at worst intrabar
+        equity_points.append((trade['time'], running_equity + mae))
+
+        # equity after close (realized)
+        profit = trade['profit']
+        running_equity += profit
+        equity_points.append((trade['time'], running_equity))
+
+    equity_df = pd.DataFrame(equity_points, columns=['time', 'equity'])
+    equity_df['date'] = equity_df['time'].dt.date
+
+    # --- Daily Drawdown (intrabar included) ---
+    daily_dd = equity_df.groupby('date')['equity'].apply(
+        lambda s: (s - s.cummax()).min()
+    ).reset_index(name="daily_dd")
+    daily_drawdown = daily_dd['daily_dd'].min()
+     # --- Max Equity Drawdown (portfolio level) ---
+    equity_curve = equity_df.set_index('time')['equity']
+    rolling_max = equity_curve.cummax()
+    max_equity_drawdown = (equity_curve - rolling_max).min()
+
+    df['intrabar_drawdown'] = maes
+
+    # ✅ Max intrabar drawdown across all trades
+    max_intrabar_dd = df['intrabar_drawdown'].min()
+
+    # 🖨️ Print results
+    print(f"Daily Drawdown : {daily_drawdown:.2f}")
+    print(f"Max Drawdown (portfolio): {max_equity_drawdown:.2f}")
+    print(f"worst trades (trade MAE): {maes}")
+    print(f"max_intrabar_drawdown: {max_intrabar_dd:.2f}")
 
     biggest_win = df['profit'].max()
     print('biggest_profit:', round(biggest_win, 2))
 
     biggest_loss = df['profit'].min()
-    print('daily_drawdown:', round(biggest_loss, 2))
+    print('equity_daily_drawdown:', round(biggest_loss, 2))
 
     df['current_max'] = df['profit_cumulative'].expanding().max()
     df['drawdown'] = df['profit_cumulative'] - df['current_max']
     max_drawdown = df['drawdown'].min()
-    print('max_drawown:', round(max_drawdown, 2))
+    print('equity_max_drawown:', round(max_drawdown, 2))
 
     win_trades = df[df['profit'] > 0]
     loss_trades = df[df['profit'] < 0]
