@@ -84,9 +84,11 @@ class Backtester():
         self.swap_long = swap_long
         self.swap_short = swap_short
         self.triple_swap_day = triple_swap_day
-
+    ohlc_dff = None
     def set_historical_data(self, ohlc_data):
-        self.ohlc_data = ohlc_data
+        global ohlc_dff
+        self.ohlc_data = ohlc_data# start here
+        ohlc_dff = ohlc_data
 
     def set_on_bar(self, on_bar):
         self.on_bar = on_bar
@@ -253,14 +255,11 @@ class Backtester():
     
 
 # Extract Data and Visualization
-ohlc_dff = None
 def get_ohlc_history(symbol, timeframe, date_from, date_to, additional_columns=[]):
-    global ohlc_dff
     ohlc = mt5.copy_rates_range(symbol, timeframe, date_from, date_to)
 
     ohlc_df = pd.DataFrame(ohlc)
     ohlc_df['time'] = pd.to_datetime(ohlc_df['time'], unit='s')
-    ohlc_dff = ohlc_df
     return ohlc_df[['time', 'open', 'high', 'low', 'close'] + additional_columns]
 
 
@@ -375,12 +374,12 @@ def evaluate_backtest(df_og):
     print('biggest_profit:', round(biggest_win, 2))
 
     biggest_loss = df['profit'].min()
-    print('equity_daily_drawdown:', round(biggest_loss, 2))
+    print('balance_daily_drawdown:', round(biggest_loss, 2))
 
     df['current_max'] = df['profit_cumulative'].expanding().max()
-    df['drawdown'] = df['profit_cumulative'] - df['current_max']
-    max_drawdown = df['drawdown'].min()
-    print('equity_max_drawown:', round(max_drawdown, 2))
+    df['drawdown1'] = df['profit_cumulative'] - df['current_max']
+    max_drawdown = df['drawdown1'].min()
+    print('balance_max_drawown:', round(max_drawdown, 2))
 
     win_trades = df[df['profit'] > 0]
     loss_trades = df[df['profit'] < 0]
@@ -461,8 +460,11 @@ def evaluate_backtest(df_og):
     #fig_drawdown = px.line(df, x='close_time', y=['profit_cumulative', 'current_max'], title='pnl curve')
     #display(fig_drawdown)
 
-    fig_drawdown2 = px.line(df, x='close_time', y='drawdown', title='drawdown curve')
+    fig_drawdown2 = px.line(df, x='open_time', y='drawdown', title='balance drawdown curve')
     display(fig_drawdown2)
 
     max_drawdown = df['drawdown'].min()
     print('max_drawdown', round(max_drawdown, 2),)
+
+    fig_drawdown2 = px.line(df, x='open_time', y= 'intrabar_drawdown', title='maes curve')
+    display(fig_drawdown2)
