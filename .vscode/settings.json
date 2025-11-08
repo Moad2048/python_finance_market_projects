@@ -1,0 +1,8 @@
+{
+    "workbench.editor.autoLockGroups": {
+        "notebookOutputEditor": true,
+        "jupyter-notebook": true,
+        "default": true
+    },
+    "workbench.editor.limit.enabled": false
+}
